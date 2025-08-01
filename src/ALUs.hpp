@@ -28,6 +28,7 @@ public:
   ALUout output;
   ALU() = default;
   void calculate();
+  void flush();
 };
 
 void ALU::calculate() {
@@ -72,6 +73,11 @@ void ALU::calculate() {
       output.value = input.left != input.right;
     }
   }
+}
+
+void ALU::flush() {
+  input = ALUin();
+  output = ALUout();
 }
 
 #endif

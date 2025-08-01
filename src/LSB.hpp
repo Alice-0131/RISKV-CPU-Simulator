@@ -21,6 +21,7 @@ private:
   LSBInfo queue[size_lsb];
   int tail;
   int head;
+  int size;
 
 public:
   LSBInfo input;
@@ -33,19 +34,21 @@ public:
 };
 
 void LSB::work() {
-  if (input.busy) {
+  if (input.busy && size < size_lsb) {
     queue[tail] = input;
     tail  = (tail + 1) % size_lsb;
+    ++size;
     input.busy = false;
     ready[input.ind] = false;
   }
-  if (queue[head].name == LB || queue[head].name == LBU || queue[head].name == LH 
+  if (size > 0 && (queue[head].name == LB || queue[head].name == LBU || queue[head].name == LH 
     || queue[head].name == LHU || queue[head].name == LW || 
-    ready[queue[head].ind] && (queue[head].name == SB || queue[head].name == SW || queue[head].name == SH)) {
+    ready[queue[head].ind] && (queue[head].name == SB || queue[head].name == SW || queue[head].name == SH))) {
       if (!cntdown && !output.busy) {
         cntdown = 3;
         output = queue[head];
         head = (head + 1) % size_lsb;
+        --size;
         ready[queue[head].ind] = false;
       } else {
         --cntdown;
@@ -54,9 +57,12 @@ void LSB::work() {
 }
 
 void LSB::flush() {
-  tail = head = 0;
+  tail = head = size = 0;
   for (int i = 0; i < size_rob; ++i) {
     ready[i] = false;
   }
+  cntdown = 3;
+  input = LSBInfo();
+  output = LSBInfo();
 }
 #endif

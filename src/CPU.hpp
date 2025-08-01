@@ -123,26 +123,30 @@ void CPU::transfer() {
   }
   // rob -> rs(issue)
   if (rob.issueout.busy && !rs.issue_in.busy) {
-    rob.issueout.busy = false;
-    rs.issue_in.busy = true;
-    rs.issue_in.name = rob.issueout.name;
-    rs.issue_in.imm = rob.issueout.imm;
-    rs.issue_in.ind = rob.issueout.ind;
-    if (rf.rely[rob.issueout.rs1] == -1) {
-      rs.issue_in.Vi = rf.reg[rob.issueout.rs1];
-      rs.issue_in.Qi = -1;
+    if (rob.issueout.name == JAL || rob.issueout.name == JALR || rob.issueout.name == AUIPC || rob.issueout.name == LUI) {
+      rf.rely[rob.issueout.rd] = rob.issueout.ind;
     } else {
-      rs.issue_in.Vi = 0;
-      rs.issue_in.Qi = rf.rely[rob.issueout.rs1];
+      rob.issueout.busy = false;
+      rs.issue_in.busy = true;
+      rs.issue_in.name = rob.issueout.name;
+      rs.issue_in.imm = rob.issueout.imm;
+      rs.issue_in.ind = rob.issueout.ind;
+      if (rf.rely[rob.issueout.rs1] == -1) {
+        rs.issue_in.Vi = rf.reg[rob.issueout.rs1];
+        rs.issue_in.Qi = -1;
+      } else {
+        rs.issue_in.Vi = 0;
+        rs.issue_in.Qi = rf.rely[rob.issueout.rs1];
+      }
+      if (rf.rely[rob.issueout.rs2] == -1) {
+        rs.issue_in.Vj = rf.reg[rob.issueout.rs2];
+        rs.issue_in.Qj = -1;
+      } else {
+        rs.issue_in.Vi = 0;
+        rs.issue_in.Qj = rf.rely[rob.issueout.rs2];
+      }
+      rf.rely[rob.issueout.rd] = rob.issueout.ind;
     }
-    if (rf.rely[rob.issueout.rs2] == -1) {
-      rs.issue_in.Vj = rf.reg[rob.issueout.rs2];
-      rs.issue_in.Qj = -1;
-    } else {
-      rs.issue_in.Vi = 0;
-      rs.issue_in.Qj = rf.rely[rob.issueout.rs2];
-    }
-    rf.rely[rob.issueout.rd] = rob.issueout.ind;
   }
   // rob -> rs(write&broadcast)
   if (rob.wbout.busy && !rs.wb_in.busy) {
@@ -167,18 +171,16 @@ void CPU::transfer() {
     case ADDI: case ANDI: case ORI: case XORI: case SLLI: case SRLI: case SRAI: case SLTI: case SLTIU:
     case LB: case LBU: case LH: case LHU: case LW: case JAL: case JALR: case AUIPC: case LUI:{
       rf.reg[rob.commitout.rd] = rob.commitout.value;
-      for (int i = 0; i < 32; ++i) {
-        if (rf.rely[i] == rob.commitout.ind) {
-          rf.rely[i] = -1;
-          rf.reg[i] = rob.commitout.value;
-        }
+      std::cout <<rob.commitout.ind << ": reg[" << rob.commitout.rd << "] = " << rob.commitout.value << ' ' << rob.commitout.name << '\n';
+      if (rf.rely[rob.commitout.rd] == rob.commitout.ind) {
+        rf.rely[rob.commitout.rd] = -1;
       }
       break;
     }
     case BEQ: case BGE: case BGEU: case BLT: case BLTU: case BNE: {
       if (rob.commitout.value) { // predict wrongly
-        flush();
         pc = rob.commitout.pc + rob.commitout.imm;
+        flush();
       }
       break;
     }
@@ -190,11 +192,12 @@ void CPU::transfer() {
   }
   // rs -> lsb/alu
   if (rs.output.busy) {
-    rs.output.busy = false;
     switch (rs.output.name)
     {
-    case ADD: case SUB: case AND: case OR: case XOR: case SLL: case SRL: case SRA: case SLT: case SLTU:{
+    case ADD: case SUB: case AND: case OR: case XOR: case SLL: case SRL: case SRA: case SLT: case SLTU:
+    case BEQ: case BGE: case BGEU: case BLT: case BLTU: case BNE: {
       if (!alu.input.busy) {
+        rs.output.busy = false;
         alu.input.busy = true;
         alu.input.ind = rs.output.ind;
         alu.input.ins = rs.output.name;
@@ -205,6 +208,7 @@ void CPU::transfer() {
     }
     case ADDI: case ANDI: case ORI: case XORI: case SLLI: case SRLI: case SRAI: case SLTI: case SLTIU: {
       if (!alu.input.busy) {
+        rs.output.busy = false;
         alu.input.busy = true;
         alu.input.ind = rs.output.ind;
         alu.input.ins = rs.output.name;
@@ -215,6 +219,7 @@ void CPU::transfer() {
     }
     case LB: case LBU: case LH: case LHU: case LW: {
       if (!lsb.input.busy) {
+        rs.output.busy = false;
         lsb.input.busy = true;
         lsb.input.name = rs.output.name;
         lsb.input.ind = rs.output.ind;
@@ -224,6 +229,7 @@ void CPU::transfer() {
     }
     case SB: case SH: case SW: {
       if (!lsb.input.busy) {
+        rs.output.busy = false;
         lsb.input.busy = true;
         lsb.input.name = rs.output.name;
         lsb.input.ind = rs.output.ind;
@@ -278,6 +284,10 @@ void CPU::flush() {
   rs.flush();
   lsb.flush();
   rf.flush();
+  alu.flush();
+  memory.flush();
+  decoder.output.busy = false;
+  stop = false;
 }
 
 #endif

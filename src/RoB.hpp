@@ -2,7 +2,7 @@
 #define ROB_HPP
 
 
-const int size_rob = 100;
+const int size_rob = 63;
 
 struct DetoRoB
 {
@@ -92,6 +92,7 @@ private:
   RoBInfo queue[size_rob];
   int head;
   int tail;
+  int size;
 
 public:
   DetoRoB   decoderinput;
@@ -115,9 +116,10 @@ void RoB::work(){
     flag = false;
   }
   // enqueue
-  if (decoderinput.busy) {
+  if (decoderinput.busy && size < size_rob) {
     queue[tail] = decoderinput;
     tail = (tail + 1) % size_rob;
+    ++size;
     switch (decoderinput.name)
     {
     case JAL: {
@@ -142,12 +144,13 @@ void RoB::work(){
     }
     case RET: {
       queue[tail - 1].ready = true;
-    }
-    default:
-      issueout = decoderinput;
-      issueout.ind = tail - 1;
       break;
     }
+    default:
+      break;
+    }
+    issueout = decoderinput;
+    issueout.ind = tail - 1;
     decoderinput.busy = false;
   }
   // transmit value
@@ -162,14 +165,23 @@ void RoB::work(){
     ALULSBinput.busy = false;
   }
   // dequeue
-  if (queue[head].ready && !commitout.busy) {
+  if (queue[head].ready && !commitout.busy && size > 0) {
     commitout = queue[head];
     commitout.ind = head;
     head = (head + 1) % size_rob;
+    --size;
   }
 }
 
 void RoB::flush() {
   head = tail = 0;
+  size = 0;
+  decoderinput = DetoRoB();
+  ALULSBinput = A_LtoRoB();
+  issueout = Issoutput();
+  commitout = Comoutput();
+  wbout = Comoutput();
+  flag = false;
+  ind = 0;
 }
 #endif

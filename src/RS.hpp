@@ -128,13 +128,33 @@ void RS::work(){
     issue_in.busy = false;
   }
   // execute the instruction
+  bool flag = true;
   for (int i = 0; i < cur_size; ++i) {
-    if (queue[i].Qi == -1 && queue[i].Qj == -1) { // dequeue
-      output = queue[i];
-      --cur_size;
-      for (int j = i; j < cur_size; ++j) {
-        queue[j] = queue[j + 1];
+    switch (queue[i].name)
+    {
+    case LB: case LBU: case LH: case LHU: case LW: case SB: case SH: case SW:{
+      if (flag && queue[i].Qi == -1 && queue[i].Qj == -1) { // dequeue
+        output = queue[i];
+        --cur_size;
+        for (int j = i; j < cur_size; ++j) {
+          queue[j] = queue[j + 1];
+        }
       }
+      flag = false;
+      break;
+    }
+    default:{
+      if (queue[i].Qi == -1 && queue[i].Qj == -1) { // dequeue
+        output = queue[i];
+        --cur_size;
+        for (int j = i; j < cur_size; ++j) {
+          queue[j] = queue[j + 1];
+        }
+      }
+      break;
+    }
+    }
+    if (output.busy) {
       break;
     }
   }
@@ -142,6 +162,10 @@ void RS::work(){
 
 void RS::flush() {
   cur_size = 0;
+  issue_in = Issinput();
+  wb_in = Cominput();
+  com_in = Cominput();
+  output = RSout();
 }
 
 #endif
