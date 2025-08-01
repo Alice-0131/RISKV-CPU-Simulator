@@ -142,7 +142,7 @@ void CPU::transfer() {
         rs.issue_in.Vj = rf.reg[rob.issueout.rs2];
         rs.issue_in.Qj = -1;
       } else {
-        rs.issue_in.Vi = 0;
+        rs.issue_in.Vj = 0;
         rs.issue_in.Qj = rf.rely[rob.issueout.rs2];
       }
       rf.rely[rob.issueout.rd] = rob.issueout.ind;
@@ -171,7 +171,7 @@ void CPU::transfer() {
     case ADDI: case ANDI: case ORI: case XORI: case SLLI: case SRLI: case SRAI: case SLTI: case SLTIU:
     case LB: case LBU: case LH: case LHU: case LW: case JAL: case JALR: case AUIPC: case LUI:{
       rf.reg[rob.commitout.rd] = rob.commitout.value;
-      //std::cout <<rob.commitout.ind << ": reg[" << rob.commitout.rd << "] = " << rob.commitout.value << ' ' << rob.commitout.name << '\n';
+      std::cout <<rob.commitout.ind << ": reg[" << rob.commitout.rd << "] = " << rob.commitout.value << ' ' << rob.commitout.name << '\n';
       if (rf.rely[rob.commitout.rd] == rob.commitout.ind) {
         rf.rely[rob.commitout.rd] = -1;
       }
