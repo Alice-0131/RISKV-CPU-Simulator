@@ -11,7 +11,7 @@ const int size_mem = 1500000;
 class Memory
 {
 public:
-  uint8_t mem[size_mem] = {0};
+  int mem[size_mem] = {0};
   LSBInfo input;
   LSBInfo output;
   Memory() = default;
@@ -43,9 +43,9 @@ public:
         mem[input.addr] = input.value & 0xff;
         input.value = input.value >> 8;
         mem[input.addr + 1] = input.value & 0xff;
-        input.value = input.value >> 16;
+        input.value = input.value >> 8;
         mem[input.addr + 2] = input.value & 0xff;
-        input.value = input.value >> 24;
+        input.value = input.value >> 8;
         mem[input.addr + 3] = input.value & 0xff;
       }
       input.busy = false;

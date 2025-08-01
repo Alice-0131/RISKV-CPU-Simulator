@@ -48,6 +48,9 @@ void CPU::advance() {
   ++clk;
   transfer();
   work();
+  // if (clk > 1060589 && clk < 1060598) {
+  //   std::cout << memory.mem[4732] << '\n';
+  // }
 }
 
 void CPU::read() {
@@ -171,7 +174,12 @@ void CPU::transfer() {
     case ADDI: case ANDI: case ORI: case XORI: case SLLI: case SRLI: case SRAI: case SLTI: case SLTIU:
     case LB: case LBU: case LH: case LHU: case LW: case JAL: case JALR: case AUIPC: case LUI:{
       rf.reg[rob.commitout.rd] = rob.commitout.value;
-      //std::cout <<rob.commitout.ind << ": reg[" << rob.commitout.rd << "] = " << rob.commitout.value << ' ' << rob.commitout.name << '\n';
+      //std::cout <<rob.commitout.ind << ": reg[" << rob.commitout.rd << "] = " << rob.commitout.value << ' ' << rob.commitout.pc << ' ' << clk << '\n';
+      // if (rob.commitout.rd == 0) {
+      //   std::cout << "reg[0] = 0\n";
+      // } else {
+      //   std::cout << "reg[" << rob.commitout.rd << "] = " << rob.commitout.value << '\n';
+      // }
       if (rf.rely[rob.commitout.rd] == rob.commitout.ind) {
         rf.rely[rob.commitout.rd] = -1;
       }
