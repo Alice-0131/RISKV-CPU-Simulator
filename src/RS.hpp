@@ -68,7 +68,8 @@ private:
 
 public:
   Issinput  issue_in;
-  Cominput commit_in;
+  Cominput wb_in;
+  Cominput com_in;
   RSout   output;
 
   RS() = default;
@@ -78,26 +79,47 @@ public:
 
 void RS::work(){
   // update dependency
-  if (commit_in.busy) {
-      if (issue_in.busy && issue_in.Qi == commit_in.ind) {
-      issue_in.Vi = commit_in.value;
+  if (wb_in.busy) {
+    if (issue_in.busy && issue_in.Qi == wb_in.ind) {
+      issue_in.Vi = wb_in.value;
       issue_in.Qi = -1;
     }
-    if (issue_in.busy && issue_in.Qj == commit_in.ind) {
-      issue_in.Vj = commit_in.value;
+    if (issue_in.busy && issue_in.Qj == wb_in.ind) {
+      issue_in.Vj = wb_in.value;
       issue_in.Qj = -1;
     }
     for (int i = 0; i < cur_size; ++i) {
-      if (queue[i].Qi == commit_in.ind) {
-        queue[i].Vi = commit_in.value;
+      if (queue[i].Qi == wb_in.ind) {
+        queue[i].Vi = wb_in.value;
         queue[i].Qi = -1;
       }
-      if (queue[i].Qj == commit_in.ind) {
-        queue[i].Vj = commit_in.value;
+      if (queue[i].Qj == wb_in.ind) {
+        queue[i].Vj = wb_in.value;
         queue[i].Qj = -1;
       }
     }
-    commit_in.busy = false;
+    wb_in.busy = false;
+  }
+  if (com_in.busy) {
+    if (issue_in.busy && issue_in.Qi == com_in.ind) {
+      issue_in.Vi = com_in.value;
+      issue_in.Qi = -1;
+    }
+    if (issue_in.busy && issue_in.Qj == com_in.ind) {
+      issue_in.Vj = com_in.value;
+      issue_in.Qj = -1;
+    }
+    for (int i = 0; i < cur_size; ++i) {
+      if (queue[i].Qi == com_in.ind) {
+        queue[i].Vi = com_in.value;
+        queue[i].Qi = -1;
+      }
+      if (queue[i].Qj == com_in.ind) {
+        queue[i].Vj = com_in.value;
+        queue[i].Qj = -1;
+      }
+    }
+    com_in.busy = false;
   }
   // add instruction
   if (issue_in.busy && cur_size < size_rs) {

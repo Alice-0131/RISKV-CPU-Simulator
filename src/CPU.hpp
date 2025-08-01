@@ -5,7 +5,6 @@
 #include "ALUs.hpp"
 #include "LSB.hpp"
 #include "Memory.hpp"
-#include "Predictor.hpp"
 #include "RF.hpp"
 #include "RoB.hpp"
 #include "RS.hpp"
@@ -23,7 +22,6 @@ private:
   RF        rf;
   LSB       lsb;
   Memory    memory;
-  Predictor predictor;
   ALU       alu;
   bool      stop = false;
   bool      running = true;
@@ -147,17 +145,22 @@ void CPU::transfer() {
     rf.rely[rob.issueout.rd] = rob.issueout.ind;
   }
   // rob -> rs(write&broadcast)
-  if (rob.wbout.busy && !rs.commit_in.busy) {
+  if (rob.wbout.busy && !rs.wb_in.busy) {
     rob.wbout.busy = false;
-    rs.commit_in.busy = true;
-    rs.commit_in.ind = rob.wbout.ind;
-    rs.commit_in.value = rob.commitout.value;
+    rs.wb_in.busy = true;
+    rs.wb_in.ind = rob.wbout.ind;
+    rs.wb_in.value = rob.wbout.value;
   }
   // rob -> rf(commit)
   if (rob.flag){
     lsb.ready[rob.ind] = true;
   }
   if (rob.commitout.busy) {
+    if (!rs.com_in.busy) {
+      rs.com_in.busy = true;
+      rs.com_in.ind = rob.commitout.ind;
+      rs.com_in.value = rob.commitout.value;
+    }
     switch (rob.commitout.name)
     {
     case ADD: case SUB: case AND: case OR: case XOR: case SLL: case SRL: case SRA: case SLT: case SLTU:

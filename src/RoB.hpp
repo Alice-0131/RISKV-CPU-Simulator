@@ -140,6 +140,9 @@ void RoB::work(){
       queue[tail - 1].ready = true;
       break;
     }
+    case RET: {
+      queue[tail - 1].ready = true;
+    }
     default:
       issueout = decoderinput;
       issueout.ind = tail - 1;
