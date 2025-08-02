@@ -116,41 +116,41 @@ void RoB::work(){
     flag = false;
   }
   // enqueue
-  if (decoderinput.busy && size < size_rob) {
+  if (decoderinput.busy && size < size_rob && !issueout.busy) {
     queue[tail] = decoderinput;
     tail = (tail + 1) % size_rob;
     ++size;
     switch (decoderinput.name)
     {
     case JAL: {
-      queue[tail - 1].value = decoderinput.pc + 4;
-      queue[tail - 1].ready = true;
+      queue[(tail - 1 + size_rob) % size_rob].value = decoderinput.pc + 4;
+      queue[(tail - 1 + size_rob) % size_rob].ready = true;
       break;
     }
     case JALR: {
-      queue[tail - 1].value = decoderinput.pc + 4;
-      queue[tail - 1].ready = true;
+      queue[(tail - 1 + size_rob) % size_rob].value = decoderinput.pc + 4;
+      queue[(tail - 1 + size_rob) % size_rob].ready = true;
       break;
     }
     case AUIPC: {
-      queue[tail - 1].value = decoderinput.pc + decoderinput.imm;
-      queue[tail - 1].ready = true;
+      queue[(tail - 1 + size_rob) % size_rob].value = decoderinput.pc + decoderinput.imm;
+      queue[(tail - 1 + size_rob) % size_rob].ready = true;
       break;
     }
     case LUI: {
-      queue[tail - 1].value = decoderinput.imm;
-      queue[tail - 1].ready = true;
+      queue[(tail - 1 + size_rob) % size_rob].value = decoderinput.imm;
+      queue[(tail - 1 + size_rob) % size_rob].ready = true;
       break;
     }
     case RET: {
-      queue[tail - 1].ready = true;
+      queue[(tail - 1 + size_rob) % size_rob].ready = true;
       break;
     }
     default:
       break;
     }
     issueout = decoderinput;
-    issueout.ind = tail - 1;
+    issueout.ind = (tail - 1 + size_rob) % size_rob;
     decoderinput.busy = false;
   }
   // transmit value

@@ -48,9 +48,6 @@ void CPU::advance() {
   ++clk;
   transfer();
   work();
-  // if (clk > 1060589 && clk < 1060598) {
-  //   std::cout << memory.mem[4732] << '\n';
-  // }
 }
 
 void CPU::read() {
@@ -128,6 +125,7 @@ void CPU::transfer() {
   if (rob.issueout.busy && !rs.issue_in.busy) {
     if (rob.issueout.name == JAL || rob.issueout.name == JALR || rob.issueout.name == AUIPC || rob.issueout.name == LUI) {
       rf.rely[rob.issueout.rd] = rob.issueout.ind;
+      rob.issueout.busy = false;
     } else {
       rob.issueout.busy = false;
       rs.issue_in.busy = true;

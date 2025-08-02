@@ -128,34 +128,36 @@ void RS::work(){
     issue_in.busy = false;
   }
   // execute the instruction
-  bool flag = true;
-  for (int i = 0; i < cur_size; ++i) {
-    switch (queue[i].name)
-    {
-    case LB: case LBU: case LH: case LHU: case LW: case SB: case SH: case SW:{
-      if (flag && queue[i].Qi == -1 && queue[i].Qj == -1) { // dequeue
-        output = queue[i];
-        --cur_size;
-        for (int j = i; j < cur_size; ++j) {
-          queue[j] = queue[j + 1];
+  if (!output.busy) {
+    bool flag = true;
+    for (int i = 0; i < cur_size; ++i) {
+      switch (queue[i].name)
+      {
+      case LB: case LBU: case LH: case LHU: case LW: case SB: case SH: case SW:{
+        if (flag && queue[i].Qi == -1 && queue[i].Qj == -1) { // dequeue
+          output = queue[i];
+          --cur_size;
+          for (int j = i; j < cur_size; ++j) {
+            queue[j] = queue[j + 1];
+          }
         }
+        flag = false;
+        break;
       }
-      flag = false;
-      break;
-    }
-    default:{
-      if (queue[i].Qi == -1 && queue[i].Qj == -1) { // dequeue
-        output = queue[i];
-        --cur_size;
-        for (int j = i; j < cur_size; ++j) {
-          queue[j] = queue[j + 1];
+      default:{
+        if (queue[i].Qi == -1 && queue[i].Qj == -1) { // dequeue
+          output = queue[i];
+          --cur_size;
+          for (int j = i; j < cur_size; ++j) {
+            queue[j] = queue[j + 1];
+          }
         }
+        break;
       }
-      break;
-    }
-    }
-    if (output.busy) {
-      break;
+      }
+      if (output.busy) {
+        break;
+      }
     }
   }
 }
